@@ -1,0 +1,22 @@
+{
+	"file" : "particle-2.mp4",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0.18039 0.10980 0.19608"
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"snapshotformat" : -1,
+	"snapshotoverlay" : "",
+	"title" : "particle-2",
+	"type" : "video",
+	"version" : 0
+}
