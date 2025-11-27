@@ -1,0 +1,22 @@
+{
+	"file" : "particle-3.mp4",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0.00392 0.43922 0.67451"
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"snapshotformat" : -1,
+	"snapshotoverlay" : "",
+	"title" : "particle-3",
+	"type" : "video",
+	"version" : 0
+}
