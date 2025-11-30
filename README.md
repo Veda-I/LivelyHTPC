@@ -41,7 +41,7 @@
 
 ## 📸 Screenshots
 
-| Classic Layout                  | Playlist Mode                  | Music Player Mode               | Visualizer Mode               | Hidden Mode               |
+| Classic Layout                  | Playlist Mode                  | Music Player               | Visualizer Mode               | Hidden Mode               |
 |----------------------------------|----------------------------------|----------------------------------|----------------------------------|----------------------------------|
 | [![Classic](Doc/Images/Classic.png)](Doc/Images/Classic.png) | [![Playlist](Doc/Images/Playlist.png)](Doc/Images/Playlist.png) | [![Music](Doc/Images/Music.png)](Doc/Images/Music.png) | [![Visualizer](Doc/Images/Visualizer.png)](Doc/Images/Visualizer.png) | [![Hidden](Doc/Images/Hidden.png)](Doc/Images/Hidden.png) |
 
@@ -228,4 +228,5 @@ This project is licensed under the GNU General Public License v3.0 – see [LICE
 - **WebNowPlaying Plugin** - **[@tjhrulz](https://github.com/tjhrulz/WebNowPlaying)** & **[@keifufu](https://github.com/keifufu)**
 ---
 Made with ❤️ for the HTPC community  
+
 *Turn your PC into a real media center – no mouse required.*
