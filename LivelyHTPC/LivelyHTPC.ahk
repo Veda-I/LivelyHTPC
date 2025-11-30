@@ -20,12 +20,12 @@ RainPath := A_AppData "\Rainmeter\Rainmeter.ini"
 
 ; --- Config ---
 Rainmeter := GetRainmeter()
-IconCount := Min(IntRead(ConfigPath, "Variables", "IconCount", 4),20)
+IconCount := Min(IntRead(ConfigPath, "Variables", "IconCount", 5),20)
 MusicCount := Min(IntRead(ConfigPath, "Variables", "Music.Playlist.Count", 0),10)
 FocusIndex := IntRead(ConfigPath, "Variables", "StartPosition", 2)
 NavigationSound := IntRead(ConfigPath, "Variables", "NavigationSound", 1)
 StartSound := IntRead(ConfigPath, "Variables", "StartSound", 1)
-VizualizerOnNav := IntRead(ConfigPath, "Variables", "VizualizerOnNav", 1)
+VisualizerOnNav := IntRead(ConfigPath, "Variables", "VisualizerOnNav", 1)
 KeyboardSurfing := IntRead(ConfigPath, "Variables", "Addon.KeyboardSurfing", 0)
 Debug := IntRead(ConfigPath, "Variables", "Debug", 0)
 
@@ -46,7 +46,6 @@ Loop MusicCount {
 	PositionToMusic[Pos] := Uri
     Musics.Push({Track: Uri, Position: Pos})
 }
-RepeatTint:= Map(0, "#Color#", 1, "#MainColor#", 2, "#MainColor#")
 
 ; --- State ---
 DesktopActive := true
@@ -54,11 +53,11 @@ LastActionTime := 0
 ActionCooldown := 200
 TVApp := false
 Playing := false
-PlayInit := false
+PlaylistInit := false
 VerPos := 0
 PlayerPos := 0
-RepeatValue := 0
 PlaylistPos := 0
+RepeatValue := 0
 Player := 0
 LaunchedApp := ""
 NavSkin := "LivelyHTPC"
@@ -68,52 +67,42 @@ VisualizerSkin := "LivelyHTPC\Visualizer"
 PlayerLoaded := isLoaded(PlayerSkin)
 PlaylistLoaded := isLoaded(PlaylistSkin) && MusicCount != 0
 VisualizerLoaded := isLoaded(VisualizerSkin) 
+RepeatTint:= Map(0, "#Color#", 1, "#MainColor#", 2, "#MainColor#")
 
 ; ----------------------------------------------------
 
 ; --- Init ---
 Init() {
 	global StartSound
-	ForceShellFocus()
-	Visualizer("Hide",1)
-	if (StartSound)
+	TaskbarDisplay("Hide")
+	VisualizerDisplay("Hide",1)
+	if (StartSound) {
 		SoundPerform(["@Resources\Sounds\Start-1.wav", "@Resources\Sounds\Start-2.wav"][Random(1,2)])
+	}	
 }
-
-; --- Visualizer ---
-Visualizer(action, type) {
-	if (VisualizerLoaded && !VizualizerOnNav && type = 1) {
-		Bang(action, VisualizerSkin)
-	}
-}
-
-; --- Playlist ---
-Playlist(action, type) {
-	if (PlaylistLoaded && type = 1) {
-		Bang(action, PlaylistSkin)
-	}
-}
-
 
 ; --- Logging ---
 Log(message) {
 	global Debug
-    if (Debug)
+    if (Debug) {
         FileAppend(formattedTime := FormatTime(A_Now, "dd/MM/yyyy HH:mm:ss") " - " message "`n", "Debug.log")
+	}	
 }
 
 ; --- Integer Read ---
 IntRead(configPath, section, key, default) {
     val := IniRead(configPath, section, key, default)
-    if (val = "")
+    if (val = "") {
         return default
+	}
     return Integer(val)
 }
 
 ; --- Sound ---
 SoundPerform(wav) {
-	if (NavigationSound)
+	if (NavigationSound) {
 		SoundPlay(wav)
+	}	
 }
 
 ; --- Skin Load ---
@@ -129,6 +118,22 @@ GetRainmeter() {
     return "C:\Program Files\Rainmeter\Rainmeter.exe"
 }
 
+; ----------------------------------------------------
+
+; --- Visualizer Display ---
+VisualizerDisplay(action, type) {
+	if (VisualizerLoaded && !VisualizerOnNav && type = 1) {
+		Bang(action, VisualizerSkin)
+	}
+}
+
+; --- Playlist Display ---
+PlaylistDisplay(action, type) {
+	if (PlaylistLoaded && type = 1) {
+		Bang(action, PlaylistSkin)
+	}		
+}
+
 ; --- Process Monitoring ---
 MonitorProcessClosure(pid, processName) {
 	Log("Monitoring " . processName . " (pid:" . pid . ")")           
@@ -139,18 +144,24 @@ MonitorProcessClosure(pid, processName) {
 
 ; --- Check Process ---
 CheckProcessClosure(pid, processName) {
+	global LaunchedApp
     if (!ProcessExist(pid)) {
         ; -- stop timer
 		Display("Show",HomeSound)
+		LaunchedApp := ""
         SetTimer(,0)
         Log("Monitoring closed") 
     }
 }
 
-; --- Force Shell Focus ---
-ForceShellFocus() {
-	WinActivate("ahk_class Progman")
-}
+; --- Taskbar Display ---
+TaskbarDisplay(action) {
+	if (action = "Show") {
+		WinSetTransparent(255, "ahk_class Shell_TrayWnd")
+	} else {
+		WinSetTransparent(0, "ahk_class Shell_TrayWnd")
+	}	
+} 
 
 ; --- Check Skin Lock ---
 CanNotify() {
@@ -194,31 +205,28 @@ Display(action,sound) {
     try {
 		if (!DesktopActive && action = "Show") {
 			; -- show skin
-			TVApp := false
-			ForceShellFocus()
-			DesktopActive := true
-			VerPos := 0
 			SoundPerform(sound)
-			Sleep(200)
+			TVApp := false
+			VerPos := 0
+			DesktopActive := true
 			Bang(action . "FadeGroup", "LivelyHTPC")
-			Visualizer(action,2)
-			Playlist(action,2)
+			VisualizerDisplay(action,2)
+			PlaylistDisplay(action,2)
 			Log("Display: " . action . " Skin")
 		} else if (DesktopActive && action = "Hide") {
 			; -- hide skin
-			DesktopActive := false
 			VerPos := 0
+			DesktopActive := false
 			SoundPerform(sound)
-			Sleep(200)
 			Bang(action . "FadeGroup", "LivelyHTPC")
-			Visualizer(action,2)
-			Playlist(action,1)
+			VisualizerDisplay(action,2)
+			PlaylistDisplay(action,1)
 			Log("Display: " . action . " Skin")
 		} else {
 			Log("Display: Needless (" . action . ")")
 		}
     } catch as e {
-        Log("Display Error: " . e.Message)
+        Log("Display Error: " . action . " | " . e.Message)
     }	
 }
 
@@ -239,6 +247,21 @@ CanPerformAction() {
     LastActionTime := currentTime
     return true
 }
+
+; --- Nav Focus ---
+NavFocus(focus) {
+	global VerPos
+	if (focus = "On") {
+		VerPos := 0
+		Bang('SetTransparency 255', NavSkin)
+	} else {
+		Bang('SetTransparency 200', NavSkin)
+	}
+}
+
+
+; --- Player -----------------------------------------
+
 
 ; --- Monitoring Player ---
 HidePlayer() {
@@ -262,9 +285,9 @@ HidePlayer() {
 }
 
 ; --- Play Player ---
-Play(track) {
+PlayerPlay(track) {
     Log("Launching Music: " . track)
-	Visualizer("Show",1)
+	VisualizerDisplay("Show",1)
     try {
         SetTimer(HidePlayer, 50)  ; -- freq : 50ms
 		Run('explorer.exe "' . track . '"', , "Hide") 	
@@ -274,15 +297,29 @@ Play(track) {
 }
 
 ; --- Stop Player ---
-Stop() {
-	global Player
-	Visualizer("Hide",1)
+PlayerStop() {
+	global Player, Playing, PlaylistInit
+	SoundPerform(OffSound)
 	if (Player) {
 		WinClose(Player)
 		Log("Player closed (" . Player . ")")
 	} else {
 		Log("Player not found (" . Player . ")")
 	}
+	for music in Musics {
+		meter := "MeterMusic" . music.Position
+		Bang('SetOption ' . meter . ' ImageTint "#Color#"', PlaylistSkin)
+		Bang('HideMeter ' . meter, PlaylistSkin)	
+	}
+	Bang('SetOption MeterStartStop ImageTint "#MainColor#"', PlaylistSkin)
+	Sleep(500)
+	Playing := false
+	PlaylistInit := false
+	NavFocus("On")
+	VisualizerDisplay("Hide",1)
+	PlaylistDisplay("HideFade", 1)
+	Sleep(500)
+	Bang('SetOption MeterStartStop ImageName "#@#Icons\Music\start.png"', PlaylistSkin)	
 }
 
 ; --- Player Navigation ---
@@ -354,18 +391,14 @@ PlayerAction() {
 }
 
 
-; *** Init ***
-Init()
+; --- Events -----------------------------------------
 
 
-; ----------------------------------------------------
-
-
-; --- Bar Hotkeys ---
+; --- Navigation Bar | Hotkeys ---
 #HotIf DesktopActive && VerPos = 0
 
 ; --- Right Arrow ---
-Right:: {
+$Right:: {
     global FocusIndex, IconCount, RightSound
     if (CanPerformAction() && FocusIndex < IconCount) {
         SoundPerform(RightSound)
@@ -376,7 +409,7 @@ Right:: {
 }
 
 ; --- Left Arrow ---
-Left:: {
+$Left:: {
     global FocusIndex, LeftSound
     if (CanPerformAction() && FocusIndex > 1) {
         SoundPerform(LeftSound)
@@ -387,7 +420,7 @@ Left:: {
 }
 
 ; --- Enter Button ---
-Enter:: {
+$Enter:: {
     global FocusIndex, Icons, SelectSound, LaunchedApp, TVApp
     for icon in Icons {
         if (icon.Position = FocusIndex) {
@@ -405,8 +438,9 @@ Enter:: {
 
                 ; -- extract process name
                 processName := ""
-                if (RegExMatch(icon.Action, "([^\\]+?\.exe)", &m))
+                if (RegExMatch(icon.Action, "([^\\]+?\.exe)", &m)) {
                     processName := m[1]
+				}
 
                 LaunchedApp := processName	
 				
@@ -414,7 +448,8 @@ Enter:: {
 				if InStr(icon.Action, "youtube.com/tv") {
 					TVApp := true
 				}
-
+				Display("Hide",SelectSound)
+				
                 ; -- wait logic : wait 10s for real window --
                 maxWait := 100
                 found := false
@@ -438,14 +473,10 @@ Enter:: {
 
                 ; -- Monitoring
                 MonitorProcessClosure(real_pid, processName)
-				
-				; -- hide skin
-				Display("Hide",SelectSound) 
-				
 				timer := A_TickCount
 
-				; -- wait window visible (max 10s)
-				if !WinWaitActive("ahk_exe " . processName, , 10) {
+				; -- wait window visible (max 2s)
+				if !WinWaitActive("ahk_exe " . processName, , 2) {
 					WinActivate("ahk_exe " . processName)
 					timer := A_TickCount - timer
 					Log("Window " . processName . " forced (" . timer . "ms)")
@@ -464,120 +495,101 @@ Enter:: {
 
 #HotIf
 
-; --- Nav Hotkeys | Player ---
+; --- Navigation Bar | Player | Hotkeys ---
 #HotIf DesktopActive && PlayerLoaded && Playing && VerPos = 0
 
-Up:: {
+$Up:: {
 	global VerPos, PlayerPos
 	VerPos := 1
 	PlayerPos := 0
-	Bang('SetTransparency 200', NavSkin)
+	NavFocus("Off")
     SoundPerform(ClickSound)
 	Bang('SetOption MeterPlayPause ImageTint "#SelectColor#"', PlayerSkin)
-	return
 }
 
 #HotIf
 
-; --- Nav Hotkeys | Playlist ---
+; --- Navigation Bar | Playlist | Hotkeys ---
 #HotIf DesktopActive && PlaylistLoaded && VerPos = 0
 
-Down:: {
+$Down:: {
 	global VerPos
 	VerPos := -1
     SoundPerform(ClickSound)
-	Bang('SetTransparency 200', NavSkin)
+	NavFocus("Off")
 	if (Playing) {
 		Bang('SetOption MeterStartStop ImageName "#@#Icons\Music\stop.png"', PlaylistSkin)
 	} else {
 		Bang('SetOption MeterStartStop ImageName "#@#Icons\Music\start.png"', PlaylistSkin)
 	}
 	Bang('SetOption MeterStartStop ImageTint "#SelectColor#"', PlaylistSkin)
-	Playlist("ShowFade", 1)
-	return
+	PlaylistDisplay("ShowFade", 1)
 }
 
 #HotIf
 
-; --- Player Hotkeys ---
+; --- Player | Hotkeys ---
 #HotIf DesktopActive && PlayerLoaded && Playing && VerPos = 1
 
-Down:: {
-	global VerPos, PlayerPos
-	VerPos := 0
+$Down:: {
+	global PlayerPos
 	PlayerPos := 0
-	Bang('SetTransparency 255', NavSkin)
+	NavFocus("On")
 	Bang('SetOption MeterPrev ImageTint "#Color#"', PlayerSkin)
 	Bang('SetOption MeterPlayPause ImageTint "#Color#"', PlayerSkin)
 	Bang('SetOption MeterNext ImageTint "#Color#"', PlayerSkin)
 	Bang('SetOption MeterRepeat ImageTint "' . RepeatTint[RepeatValue] . '"', PlayerSkin)
     SoundPerform(ClickSound)
-	return
 }
 
-Enter:: {
+$Enter:: {
     SoundPerform(EnterSound)
 	PlayerAction()
-	return
 }
 
-Left:: {
+$Left:: {
 	global PlayerPos
 	if (PlayerPos > -1) {
 		SoundPerform(ClickSound)
 		PlayerPos -= 1
 		PlayerNavigation("Left")
 	}
-	return
 }
 
-Right:: {
+$Right:: {
 	global PlayerPos
 	if (PlayerPos < 2) {
 		SoundPerform(ClickSound)
 		PlayerPos += 1
 		PlayerNavigation("Right")
 	}
-	return
 }
 
 #HotIf
 
-; --- Playlist Hotkeys ---
+; --- Playlist | Hotkeys ---
 #HotIf DesktopActive && PlaylistLoaded && VerPos = -1
 
-Up:: {
-	global VerPos, PlaylistPos, PlayInit
-	VerPos := 0
+$Up:: {
+	global PlaylistPos
 	PlaylistPos := 0
-	PlayInit := false
     SoundPerform(ClickSound)
 	for music in Musics {
 		meter := "MeterMusic" . music.Position
 		Bang('SetOption ' . meter . ' ImageTint "#Color#"', PlaylistSkin)
-		Bang('HideMeter ' . meter, PlaylistSkin)	
+		if (!Playing) {
+			Bang('HideMeter ' . meter, PlaylistSkin)	
+		}
 	}
-
-	Bang('SetTransparency 255', NavSkin)
-	Playlist("HideFade", 1)
-	return
+	NavFocus("On")
+	PlaylistDisplay("HideFade", 1)
 }
 
-Enter:: {
-	global VerPos, PlaylistPos, Playing, PlayInit
+$Enter:: {
+	global PlaylistPos, Playing, PlaylistInit
 	if (PlaylistPos = 0) {
 		if (Playing) {
-			SoundPerform(OffSound)
-			VerPos := 0
-			Stop()
-			Bang('SetOption MeterStartStop ImageTint "#MainColor#"', PlaylistSkin)
-			Sleep(500)
-			Playing := false
-			PlayInit := false
-			Bang('SetTransparency 255', NavSkin)
-			Playlist("HideFade", 1)
-			Sleep(500)
-			Bang('SetOption MeterStartStop ImageName "#@#Icons\Music\start.png"', PlaylistSkin)
+			PlayerStop()
 		} else {
 			SoundPerform(OnSound)
 			Bang('SetOption MeterStartStop ImageName "#@#Icons\Music\idle.png"', PlaylistSkin)
@@ -585,7 +597,7 @@ Enter:: {
 				meter := "MeterMusic" . music.Position
 				Bang('ShowMeter ' . meter, PlaylistSkin)	
 			}
-			PlayInit := true
+			PlaylistInit := true
 		}
 	} else {
 		SoundPerform(EnterSound)
@@ -595,30 +607,27 @@ Enter:: {
 		Bang('SetOption MeterStartStop ImageName "#@#Icons\Music\stop.png"', PlaylistSkin)
 		Sleep(200)
 		Bang('SetOption MeterStartStop ImageTint "#MainColor#"', PlaylistSkin)
-		Play(PositionToMusic[index])
+		PlayerPlay(PositionToMusic[index])
 		Sleep(1000)
+		Playing := true
+		PlaylistPos := 0
+		NavFocus("On")
+		PlaylistDisplay("HideFade", 1)
 		for music in Musics {
 			meter := "MeterMusic" . music.Position
 			Bang('SetOption ' . meter . ' ImageTint "#Color#"', PlaylistSkin)
-			Bang('HideMeter ' . meter, PlaylistSkin)	
-		}
-		Playing := true
-		VerPos := 0
-		PlaylistPos := 0
-		Bang('SetTransparency 255', NavSkin)
-		Playlist("HideFade", 1)
+		}	
 	}
-	return
 }
 
 #HotIf
 
-; --- Playlist Hotkeys ---
-#HotIf DesktopActive && PlaylistLoaded && VerPos = -1 && PlayInit
+; --- Playlist | Hotkeys ---
+#HotIf DesktopActive && PlaylistLoaded && VerPos = -1 && PlaylistInit
 
-Left:: {
+$Left:: {
 	global PlaylistPos
-	if (-PlaylistPos < Ceil(MusicCount/2) && !Playing) {
+	if (-PlaylistPos < Ceil(MusicCount/2)) {
 		SoundPerform(ClickSound)
 		next := (PlaylistPos > 0) ? (PlaylistPos + 4) : (PlaylistPos < 0 ? PlaylistPos + 5 : 5)
 		prev := (PlaylistPos < 0) ? (PlaylistPos + 6) : (PlaylistPos > 0 ? PlaylistPos + 5 : 0)
@@ -638,12 +647,11 @@ Left:: {
 		Bang('SetOption ' . nextMeter . ' ImageTint "#SelectColor#"', PlaylistSkin)
 		PlaylistPos -= 1
 	}
-	return
 }
 
-Right:: {
+$Right:: {
 	global PlaylistPos
-	if (PlaylistPos < Floor(MusicCount/2) && !Playing) {
+	if (PlaylistPos < Floor(MusicCount/2)) {
 		SoundPerform(ClickSound)
 		next := (PlaylistPos < 0) ? (PlaylistPos + 7) : (PlaylistPos > 0 ? PlaylistPos + 6 : 6)
 		prev := (PlaylistPos < 0) ? (PlaylistPos + 6) : (PlaylistPos > 0 ? PlaylistPos + 5 : 0)
@@ -663,84 +671,56 @@ Right:: {
 		Bang('SetOption ' . nextMeter . ' ImageTint "#SelectColor#"', PlaylistSkin)
 		PlaylistPos += 1
 	}
-	return
 }
 
 #HotIf
 
-; --- No Desktop Hotkeys ---
+; --- No Desktop | Hotkeys ---
 #HotIf !DesktopActive
 
 ; --- Browser_Home Button ---
-F10::
-Browser_Home::
+$F10::
+$Browser_Home::
 {
     global LaunchedApp
     Log("Button Browser_Home (hard kill)")
-
     if (LaunchedApp = "") {
         Log("No app launched")
         return
     } else {
-		allowedProcesses := ["firefox.exe", "chrome.exe", "kodi.exe", "steam.exe", "Playnite.FullscreenApp.exe"]
-		; -- check if allowed process
-		isAllowed := false
-		for proc in allowedProcesses {
-			if (proc = LaunchedApp) {
-				isAllowed := true
-				break
-			}
+		Display("Show",HomeSound)
+		pid := ProcessExist(LaunchedApp)
+		if (!pid) {
+			Log(LaunchedApp " no longer exists")
+			LaunchedApp := ""
+			return
 		}
-		if isAllowed {
-			Display("Show",HomeSound)
-			pid := ProcessExist(LaunchedApp)
-			if (!pid) {
-				Log(LaunchedApp " no longer exists")
-				LaunchedApp := ""
-				return
-			}
-			ProcessClose(pid)
-			Log(LaunchedApp " closed")
-			LaunchedApp := ""		
-		}
+		ProcessClose(pid)
+		Log(LaunchedApp " closed")	
+		LaunchedApp := ""		
 	}
 }
 
 #HotIf
 
-; --- Firefox Hotkeys | Related to Keyboard Surfing extension ---
-; ---
-; --- Remote Control --- 
-; --- 	- Possible actions : Left, Right, Up, Down, Enter, Browser_Home, Browser_Back, AppsKey, Volume_Up, Volume_Down
-; --- 	- Shortcuts : Browser_Home : Alt + Home | Browser_Back : Alt + Left | AppsKey : Shift + F10
-; ---
+; --- Firefox | Hotkeys | Related to Keyboard Surfing addon ---
 #HotIf !DesktopActive && WinActive("ahk_exe firefox.exe") && KeyboardSurfing
 
-Left:: {
-    Send("{Numpad4}")
-	return
-}
-
-Right:: {
-    Send("{Numpad6}")
-	return
-}
-
-Up:: {
-    Send("{Numpad8}")
-	return
-}
-
-Down:: {
-    Send("{Numpad5}")
-	return
-}
+$Left:: Send("{Numpad4}")
+$Right:: Send("{Numpad6}")
+$Up:: Send("{Numpad8}")
+$Down:: Send("{Numpad5}")
+$AppsKey:: Send("{Space}")
+$Enter:: Send("{NumpadEnter}")
 
 #HotIf
 
+; --- Steam - Youtube TV | Hotkeys ---
+#HotIf !DesktopActive  && (WinActive("ahk_exe steamwebhelper.exe") || TVApp)
+$Browser_Back:: Send("{Escape}")
 #HotIf
 
-; --- Youtube TV ---
+; --- Youtube TV | Hotkeys ---
 #HotIf !DesktopActive && TVApp
 
 ~Left:: SoundPerform(LeftSound)
@@ -752,21 +732,49 @@ Down:: {
 
 #HotIf
 
-; --- Global Hotkey ---
+; --- No App running | Hotkeys ---
+#HotIf LaunchedApp = ""
 
-F9::
-AppsKey:: 
+; --- Toggle Skin Display | Windows Taskbar (and disable/enable events) ---
+$F9::
+$AppsKey:: 
 {
     global DesktopActive
     Log("Button AppsKey")
 	if (DesktopActive) {
+		TaskbarDisplay("Show")
 		Display("Hide",BackSound)	
 	} else {
+		TaskbarDisplay("Hide")
 		Display("Show",HomeSound)	
-	}
-	return	
+	}	
 } 
 
+#HotIf
+
+; --- Global | Hotkeys ---
+
+; --- This is an emergency button to display or hide the taskbar ---
+; --- AppsKey/F9 can be used too ---
+$F7::{
+try {
+	transparent := WinGetTransparent("ahk_class Shell_TrayWnd")
+	if (transparent = "" || transparent = "255") {
+		WinSetTransparent(0, "ahk_class Shell_TrayWnd")	
+	} else {
+		WinSetTransparent(255, "ahk_class Shell_TrayWnd")	
+	}
+}	
+} 
+
+; ---
+; --- Remote Control --- 
+; --- Possible actions : Left, Right, Up, Down, Enter, Browser_Home, Browser_Back, AppsKey, Volume_Up, Volume_Down
+; ---
+
+
+; *** Init *******************************************
+Init()
 
 
 
