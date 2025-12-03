@@ -67,6 +67,8 @@
 
 ## ⚙️ Configuration
 
+> Press **F9** if the skin is already active in order to have your taskbar visible (and access Rainmeter)
+
 ### 💠 Rainmeter 
 
 In Rainmeter Manager : **Manage  → Settings**
@@ -230,3 +232,4 @@ This project is licensed under the GNU General Public License v3.0 – see [LICE
 Made with ❤️ for the HTPC community  
 
 *Turn your PC into a real media center – no mouse required.*
+
