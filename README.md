@@ -52,8 +52,8 @@
 - Windows 10 or **Windows 11** (recommended)
 - [Rainmeter](https://www.rainmeter.net) ≥ 4.5
 - [AutoHotkey v2](https://www.autohotkey.com) installed
-- (Recommended) [Wallpaper Engine](https://store.steampowered.com/app/431960/Wallpaper_Engine/) or [Lively Wallpaper](https://rocksdanister.com/lively/)
-- (Recommended) [Keyboard Surfing](https://addons.mozilla.org/en-US/firefox/addon/keyboard-surfing/) (Firefox Add-on by [Somnia](https://addons.mozilla.org/en-US/firefox/user/12273604/))
+- (Optional) [Wallpaper Engine](https://store.steampowered.com/app/431960/Wallpaper_Engine/) or [Lively Wallpaper](https://rocksdanister.com/lively/)
+- (Optional) [Keyboard Surfing](https://addons.mozilla.org/en-US/firefox/addon/keyboard-surfing/) (Firefox Add-on by [Somnia](https://addons.mozilla.org/en-US/firefox/user/12273604/))
 
 ### 💠 Installation
 
@@ -232,4 +232,5 @@ This project is licensed under the GNU General Public License v3.0 – see [LICE
 Made with ❤️ for the HTPC community  
 
 *Turn your PC into a real media center – no mouse required.*
+
 
